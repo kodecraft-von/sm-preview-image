@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8055:8055"
+    volumes:
+      - ./:/app
+    environment:
+      - FLASK_ENV=production
+    command: gunicorn --bind 0.0.0.0:8055 app:app
