@@ -16,25 +16,39 @@ def load_external_image(image_link, image_width, height):
         print(f"Error loading image: {e}")
         return None
 
+def draw_text_with_stroke(draw, text, x, y, font, text_color, stroke_color):
+    # Increased offset for larger stroke
+    offsets = [(2, 2), (-2, 2), (2, -2), (-2, -2), (0, 2), (2, 0), (-2, 0), (0, -2)]
+            
+    # Draw stroke
+    for offset in offsets:
+        draw.text((x + offset[0], y + offset[1]), text, fill=stroke_color, font=font)
+            
+    # Draw main text
+    draw.text((x, y), text, fill=text_color, font=font)
+
+
+
 def draw_price_section(width, height, listPrice, price):
     blue_section = Image.new('RGB', (width, height), color=(0, 0, 255))
     d_blue = ImageDraw.Draw(blue_section)
 
-    font_price = ImageFont.truetype("fonts/Inter-Bold.ttf", 60)
+    font_price = ImageFont.truetype("fonts/Inter-Bold.ttf", 55)
     font_listPrice = ImageFont.truetype("fonts/Inter-Bold.ttf", 45)
-    font_percentage_number = ImageFont.truetype("fonts/GilaBold.ttf", 90)  # Larger font for percentage number
-    font_percentage_symbol = ImageFont.truetype("fonts/Gila.ttf", 40)  # Smaller font for '%' and 'OFF'
+    font_percentage_number = ImageFont.truetype("fonts/Sunnyspells.otf", 120)  # Larger font for percentage number
+    font_percentage_symbol = ImageFont.truetype("fonts/Sunnyspells.otf", 50)  # Smaller font for '%' and 'OFF'
 
     # Calculate vertical positions
     list_price_y_position = height // 2 - 120
     price_y_position = height // 2 - 40
 
+    if listPrice:
     # Draw list price
-    list_price_text = f"${listPrice}"
-    text_width = font_listPrice.getbbox(list_price_text)[2] - font_listPrice.getbbox(list_price_text)[0]
-    x_position = (width - text_width) // 2
-    d_blue.text((x_position, list_price_y_position), list_price_text, fill="#FFDE59", font=font_listPrice)
-    d_blue.line([(x_position, list_price_y_position + 25), (x_position + text_width, list_price_y_position + 25)], fill="#FFDE59", width=4)
+        list_price_text = f"${listPrice}"
+        text_width = font_listPrice.getbbox(list_price_text)[2] - font_listPrice.getbbox(list_price_text)[0]
+        x_position = (width - text_width) // 2
+        d_blue.text((x_position, list_price_y_position), list_price_text, fill="#FFDE59", font=font_listPrice)
+        d_blue.line([(x_position, list_price_y_position + 25), (x_position + text_width, list_price_y_position + 25)], fill="#FFDE59", width=4)
 
     # Draw price
     price_text = f"${price}"
@@ -43,7 +57,7 @@ def draw_price_section(width, height, listPrice, price):
     d_blue.text((x_position, price_y_position), price_text, fill="white", font=font_price)
 
     # Calculate and draw percentage
-    if float(listPrice) > float(price):
+    if listPrice and float(listPrice) > float(price):
         discount = float(listPrice) - float(price)
         percentage = round((discount / float(listPrice)) * 100)
         
@@ -51,8 +65,12 @@ def draw_price_section(width, height, listPrice, price):
         percentage_text = str(percentage)
         number_width = font_percentage_number.getbbox(percentage_text)[2] - font_percentage_number.getbbox(percentage_text)[0]
         number_height = font_percentage_number.getbbox(percentage_text)[3] - font_percentage_number.getbbox(percentage_text)[1]
-        number_x = (width - number_width) // 2 - 40  # Shift left to make room for '%'
-        number_y = price_y_position + 80
+        number_x = (width - number_width) // 2 - 30  # Shift left to make room for '%'
+        number_y = price_y_position + 100
+
+        # Draw stroke
+        draw_text_with_stroke(d_blue, percentage_text, number_x, number_y, font_percentage_number, "#FFDE59", "black")
+
         d_blue.text((number_x, number_y), percentage_text, fill="#FFDE59", font=font_percentage_number)
 
         # Draw '%' symbol
@@ -60,6 +78,10 @@ def draw_price_section(width, height, listPrice, price):
         symbol_width = font_percentage_symbol.getbbox(percent_symbol)[2] - font_percentage_symbol.getbbox(percent_symbol)[0]
         symbol_x = number_x + number_width
         symbol_y = number_y + 20
+
+        # Draw stroke
+        draw_text_with_stroke(d_blue, percent_symbol, symbol_x, symbol_y, font_percentage_symbol, "#FFDE59", "black")
+
         d_blue.text((symbol_x, symbol_y), percent_symbol, fill="#FFDE59", font=font_percentage_symbol)
 
         # Draw 'OFF' text
@@ -67,20 +89,24 @@ def draw_price_section(width, height, listPrice, price):
         off_width = font_percentage_symbol.getbbox(off_text)[2] - font_percentage_symbol.getbbox(off_text)[0]
         off_x = symbol_x + (symbol_width - off_width) // 2 + 20
         off_y = symbol_y + font_percentage_symbol.getbbox(percent_symbol)[3] - font_percentage_symbol.getbbox(percent_symbol)[1]
+
+        # Draw stroke
+        draw_text_with_stroke(d_blue, off_text, off_x, off_y, font_percentage_symbol, "#FFDE59", "black")
+
         d_blue.text((off_x, off_y), off_text, fill="#FFDE59", font=font_percentage_symbol)
 
     return blue_section
 
 def create_image(price, listPrice, image_link):
-    width, height = 600, 500
+    width, height = 600, 400
     blue_width = int(0.4 * width)
-    image_width = width - blue_width
+    image_width = (width - blue_width)
     img = Image.new('RGB', (width, height), color=(255, 255, 255))
     
     # Load and paste main image
-    external_img = load_external_image(image_link, image_width, height)
+    external_img = load_external_image(image_link, round(image_width * .8), height)
     if external_img:
-        paste_x = 0
+        paste_x = 20
         paste_y = (height - external_img.height) // 2
         img.paste(external_img, (paste_x, paste_y))
     else:
@@ -88,9 +114,8 @@ def create_image(price, listPrice, image_link):
         d.text((10, 10), "Failed to load image", fill=(255, 0, 0))
 
     # Load and paste logo
-    logo_url = 'https://www.pzdeals.com/cdn/shop/t/71/assets/logo.png?v=70800974703124073071709156649'
-    response = requests.get(logo_url)
-    logo_img = Image.open(BytesIO(response.content)).convert("RGBA")
+    logo_path = 'assets/pzdeals.png'
+    logo_img = Image.open(logo_path).convert("RGBA")
     logoWidth = 40
     logoHeight = int((logo_img.height / logo_img.width) * logoWidth)
     logo_img = logo_img.resize((logoWidth, logoHeight))
