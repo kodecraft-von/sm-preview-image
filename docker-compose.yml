@@ -5,6 +5,11 @@ services:
       - "8055:8055"
     volumes:
       - ./:/app
+      - logs:/logs
     environment:
       - FLASK_ENV=production
-    command: gunicorn --bind 0.0.0.0:8055 app:app
+      - FLASK_DEBUG=0
+    command: gunicorn -c /app/gunicorn_config.py app:app
+
+volumes:
+  logs:
